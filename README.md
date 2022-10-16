@@ -33,6 +33,6 @@ I found the information about the charities from the following sources:
 The project was inspired by philosophies derived from the following:
 - https://www.effectivealtruism.org/
 - https://www.givewell.org/
-- solana.com
+- https://solana.com
 - https://www.nytimes.com/2022/08/05/opinion/the-case-for-longtermism.html
 - https://www.cambridge.org/core/journals/ethics-and-international-affairs/article/lessons-of-effective-altruism/0C716CFD3FDCAF7BBC2CE99384C9B3F2
