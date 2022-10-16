@@ -12,9 +12,9 @@ To prepare to use this CL app, you will need the following installed:
 - solana-cli (version 1.10.8 or later)
 
 # To run
-git clone this repository
-npm install
-ts-node ./src/charity_tok.ts
+- git clone this repository
+- npm install
+- ts-node ./src/charity_tok.ts
 
 ## Demo available
 https://imgur.com/a/eaim7fV 
