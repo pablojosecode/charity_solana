@@ -1,27 +1,83 @@
 import { Keypair, Connection, PublicKey, Transaction } from "@solana/web3.js";
 import { TOKEN_PROGRAM_ID, Token, AccountLayout } from "@solana/spl-token";
 import { DecimalUtil, deriveATA, resolveOrCreateATA } from "@orca-so/common-sdk";
+import { Wallet } from '@project-serum/anchor'
+import { Jupiter, RouteInfo } from "@jup-ag/core";
+import { Fetcher } from 'swr';
+import MathUtil from 'mathutil';
+
+const whirlpoolAddress = PDAUtil.getWhirlpool(....)publicKey;
+const whirlpoolData = await fetcher.getPool(whirlpoolAddress);
+
+// Get PDA based on your desired sequence
+const startTick = TickUtil.getStartTickIndex(whirlpoolData.tickCurrentIndex, whirlpoolData.tickSpacing);
+const tickArrayKey = PDAUtil.getTickArray(ORCA_WHIRLPOOL_PROGRAM_ID, whirlpoolAddress, startTick);
+
+
+// This swap assumes the swap will not cross the current tick-array's boundaries
+const currencySent = DecimalUtil.fromNumber(10, tokenADecimal);
+
+const swapInput: SwapInput = {
+    amount: currencySent,
+    otherAmountThreshold: MathUtil.ZERO,
+    sqrtPriceLimit: MathUtil.toX64(new Decimal(4.95)),
+    amountSpecifiedIsInput: true,
+    aToB: true,
+    tickArray0: tickArrays[0],
+    tickArray1: tickArrays[1],
+    tickArray2: tickArrays[2]
+}
+
+// Send the transaction
+const tokenAccountA, tokenAccountB = ...
+const oraclePda = PDAUtil.getOracle(ctx.program.programId, whirlpoolPda.publicKey);
+const tx = toTx(
+    ctx,
+    WhirlpoolIx.swapIx(ctx.program, {
+        whirlpool: whirlpoolAddress,
+        tokenAuthority: ctx.wallet.publicKey,
+        tokenOwnerAccountA: tokenAccountA,
+        tokenVaultA: whirlpoolData.tokenVaultA,
+        tokenOwnerAccountB: tokenAccountB,
+        tokenVaultB: whirlpoolData.tokenVaultB,
+        oracle: oraclePda.publicKey,
+    })
+  
+  await tx.buildAndExecute();
+
+
+import bs58 from 'bs58'
+
+const wallet = new Wallet(Keypair.fromSecretKey(bs58.decode("5HVQtBtGeBb2EnMFqfWPpEaYNMjGLumkjPGD313HsaQ5t5c9mjgiFR1BT15ZXXyQ1qKrH8hSuFpgZ5HsVqpahu5W")));
+
 import * as readline from 'readline';
 
+import { TOKEN_LIST_URL } from "@jup-ag/core";
+import { useState, useEffect } from 'react';
+import { JupiterProvider, useJupiter } from "@jup-ag/react-hook";
+import fetch from "node-fetch"
 
 
 
 import secret from "../wallet.json";
 import { getSpeedDialIconUtilityClass } from "@mui/material";
+import { ORCA_WHIRLPOOL_PROGRAM_ID, PDAUtil, SwapInput, SwapUtils, TickUtil, toTx, WhirlpoolIx } from "@orca-so/whirlpools-sdk";
 
 const RPC_ENDPOINT_URL = "https://api.devnet.solana.com";
 const COMMITMENT = 'confirmed';
 // Create a connection for sending RPC requests to Devnet
 const connection = new Connection(RPC_ENDPOINT_URL, COMMITMENT);
 let toSpend = 0;
+let key = "6U54ZGfUZYvQviRzb3BJeoj5U81SJgjtw39GArTJDNX9";
 
 // Read in the private key from wallet.json (The public and private key pair will be managed using the Keypair class)
 const keypair = Keypair.fromSecretKey(new Uint8Array(secret));
-const DEV_SAMO_MINT = new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa");
+const SOL_MINT = new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa");
 const DEV_SAMO_DECIMALS = 9;
 
+
 // Destination wallet for the devSAMO
-let dest_pubkey = new PublicKey("vQW71yo6X1FjTwt9gaWtHYeoGMu7W9ehSmNiib7oW5G");
+let dest_pubkey = new PublicKey("6YNvv1iv8354CopYGdeR5rF3sbue8ESjPeukXR54KuUQ");
 let sol_balance = 0;
 let amount = 1_000_000_000; // 1 devSAMO
 
@@ -111,7 +167,7 @@ async function main() {
 }
 
 function delay(ms: number) {
-    return new Promise( resolve => setTimeout(resolve, ms) );
+    return new Promise(resolve => setTimeout(resolve, ms));
 }
 
 async function spend(sol_balance, key) {
@@ -136,14 +192,14 @@ async function spend(sol_balance, key) {
             console.log("Well, maybe next time!");
             return;
         }
-       
+
 
         rl2.close();
     });
-    
+
     rl2.close();
     console.log("Awesome!");
-    console.log("OKAY, How much dev Samo should we send? ");
+    console.log("OKAY, How much should we send? ");
     percentage(sol_balance, key);
 
 }
@@ -158,68 +214,125 @@ async function percentage(sol_balance, key) {
     rl3.question('', (answer) => {
         toSpend = parseInt(answer);
         amount = toSpend;
-        console.log("GREAT! Sending "  + toSpend + " dev Samo tokens");
-        spendIt(key);
+        console.log("GREAT! Sending " + toSpend + " dev Samo tokens");
+        Swap(key);
         rl3.close();
     });
 }
 
 async function spendIt(key) {
-    
-  // devSAMO
-  // https://everlastingsong.github.io/nebula/
-  const DEV_SAMO_MINT = new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa");
-  const DEV_SAMO_DECIMALS = 9;
 
-  // Destination wallet for the devSAMO
-  const dest_pubkey = new PublicKey(key);
+    // devSAMO
+    // https://everlastingsong.github.io/nebula/
+    const DEV_SAMO_MINT = new PublicKey("Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa");
+    const DEV_SAMO_DECIMALS = 9;
 
-  // Amount to send
+    // Destination wallet for the devSAMO
+    const dest_pubkey = new PublicKey(key);
 
-  // Obtain the associated token account from the source wallet
-  const src_token_account = await deriveATA(keypair.publicKey, DEV_SAMO_MINT);
+    // Amount to send
 
-  // Obtain the associated token account for the destination wallet.
-  const {address: dest_token_account, ...create_ata_ix} = await resolveOrCreateATA(
-    connection,
-    dest_pubkey,
-    DEV_SAMO_MINT,
-    ()=>connection.getMinimumBalanceForRentExemption(AccountLayout.span),
-    DecimalUtil.toU64(DecimalUtil.fromNumber(0)),
-    keypair.publicKey
-  );
+    // Obtain the associated token account from the source wallet
+    const src_token_account = await deriveATA(keypair.publicKey, DEV_SAMO_MINT);
 
-  // Create the instruction to send devSAMO
-  const transfer_ix = Token.createTransferCheckedInstruction(
-    TOKEN_PROGRAM_ID,
-    src_token_account,
-    DEV_SAMO_MINT,
-    dest_token_account,
-    keypair.publicKey,
-    [],
-    amount,
-    DEV_SAMO_DECIMALS
-  );
+    // Obtain the associated token account for the destination wallet.
+    const { address: dest_token_account, ...create_ata_ix } = await resolveOrCreateATA(
+        connection,
+        dest_pubkey,
+        DEV_SAMO_MINT,
+        () => connection.getMinimumBalanceForRentExemption(AccountLayout.span),
+        DecimalUtil.toU64(DecimalUtil.fromNumber(0)),
+        keypair.publicKey
+    );
 
-  // Create the transaction and add the instruction
-  const tx = new Transaction();
-  // Create the destination associated token account (if needed)
-  create_ata_ix.instructions.map((ix) => tx.add(ix));
-  // Send devSAMO
-  tx.add(transfer_ix);
+    // Create the instruction to send devSAMO
+    const transfer_ix = Token.createTransferCheckedInstruction(
+        TOKEN_PROGRAM_ID,
+        src_token_account,
+        DEV_SAMO_MINT,
+        dest_token_account,
+        keypair.publicKey,
+        [],
+        amount,
+        DEV_SAMO_DECIMALS
+    );
 
-  // Send the transaction
-  const signers = [keypair];
-  const signature = await connection.sendTransaction(tx, signers);
-  console.log("signature:", signature);
+    // Create the transaction and add the instruction
+    const tx = new Transaction();
+    // Create the destination associated token account (if needed)
+    create_ata_ix.instructions.map((ix) => tx.add(ix));
+    // Send devSAMO
+    tx.add(transfer_ix);
 
-  // Wait for the transaction to be confirmed
-  const latestBlockhash = await connection.getLatestBlockhash();
-  await connection.confirmTransaction({
-    blockhash: latestBlockhash.blockhash,
-    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
-    signature
-  });
+    // Send the transaction
+    const signers = [keypair];
+    const signature = await connection.sendTransaction(tx, signers);
+    console.log("signature:", signature);
+
+    // Wait for the transaction to be confirmed
+    const latestBlockhash = await connection.getLatestBlockhash();
+    await connection.confirmTransaction({
+        blockhash: latestBlockhash.blockhash,
+        lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        signature
+    });
+}
+
+async function Swap(key) {
+    const routeMap = await (
+        await fetch("https://quote-api.jup.ag/v1/route-map")
+    ).json();
+    const allInputMints = Object.keys(routeMap);
+
+    const swappableOutputForSol = routeMap["Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa"];
+
+
+    //console.log("THE OUTPUT IS " + swappableOutputForSol[0]);
+
+    const { data } = await (
+        await fetch(
+            'https://quote-api.jup.ag/v3/quote?inputMint=Jd4M8bfJG3sAkd82RsGWyEXoaBXQP7njFzBwEaCTuDa&outputMint=So11111111111111111111111111111111111111112&amount=100000000&slippageBps=50'
+        )
+    ).json()
+    const routes = data
+
+    console.log("HERE " + typeof (routes));
+    const toPrint = JSON.stringify(routes)
+    console.log("ROUTES " + (toPrint));
+
+    const transactions = await (await (
+        fetch("https://quote-api.jup.ag/v1/swap", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                route: routes[0],
+                userPublicKey: key,
+                wrapUnwrapSOL: true,
+            }),
+        })
+    )).json();
+
+    console.log("transaction type " + typeof (transactions));
+    const toPrintIt = JSON.stringify(transactions)
+    console.log("to Print " + (toPrintIt));
+
+    console.log("transactions: " + (transactions));
+    const { setupTransaction, swapTransaction, cleanupTransaction } = transactions
+    for (let serializedTransaction of [setupTransaction, swapTransaction, cleanupTransaction].filter(Boolean)) {
+        // get transaction object from serialized transaction
+        const transaction = Transaction.from(Buffer.from(serializedTransaction, 'base64'))
+        // perform the swap
+        const txid = await connection.sendTransaction(transaction, [wallet.payer], {
+            skipPreflight: true
+        })
+        //await connection.confirmTransaction(txid)
+        console.log(`https://solscan.io/tx/${txid}`)
+    }
+
+    console.log("finished");
+
 }
 
 main();
