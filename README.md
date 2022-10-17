@@ -2,9 +2,9 @@
 
 This is an command line app which accesses my Solana wallet using the marvelous Orca SDK. 
 It determines how much SOL I'm currently holding and prompts me to donate to specific charities.
-In it, we interact with a Solana RPC endpoint, pi.devnet.solana.com. The SOL balance is gathered using Connection's getBalance, and is converted from lamports units (internal measure) to SOL. We use the Token class's createTransferCheckedInstruction metod to create an instruction to send a token, and we obtain the relevant token account address with derivateATA().
+In it, we interact with a Solana RPC endpoint, pi.devnet.solana.com. The SOL balance is gathered using Connection's getBalance, and is converted from lamports units (internal measure) to SOL. We use the Token class's createTransferCheckedInstruction metod to create an instruction to send a token, and we obtain the relevant token account address with derivateATA(). The goal is for it to be able to swap the token you have with whatever the charity you want to donate to uses (ie. dev Samo to SOL).
 
-If you want to make this app compatible with your wallet, you will need to delete the wallet.json and generate your own using the (official documentation)[https://orca-so.gitbook.io/orca-developer-portal/whirlpools/tour-de-whirlpool-tutorial/setting-up-your-environment].
+Previous implementation relied on the core util features of Whirpool, including accessing wallets, checking balances and sending dev SAMO.  That implementation is completely functional and cna be found here: https://github.com/pablojosecode/charity_solana/commit/d6685af64368648f683d2f6e673f44f67724bd5e. I've also added the stucture for the swapping protocols that Jupiter and Orca use. I believe the functionality is there, but is not currently connected to the rest of the app. Ran out of time after exploring all the nooks and crannies of other Web3 concepts like whirlpools, controlling liquidity, etc.
 
 # Prereqs.
 To prepare to use this CL app, you will need the following installed:
